@@ -8,9 +8,11 @@ call vundle#begin()
 " " let Vundle manage Vundle, required
 " "
 Plugin 'VundleVim/Vundle.vim'
+Plugin 'christoomey/vim-tmux-navigator'
 Plugin 'flazz/vim-colorschemes'
 Plugin 'scrooloose/nerdtree'
 Plugin 'elixir-lang/vim-elixir'
+Plugin 'tpope/vim-repeat'
 " " All of your Plugins must be added before the following line
 call vundle#end()            " required
 filetype plugin indent on    " required
@@ -28,16 +30,48 @@ filetype plugin indent on    " required
 " " see :h vundle for more details or wiki for FAQ
 " " Put your non-Plugin stuff after this line
 "
-set relativenumber
-set number
+
+" Making leader a space
 let mapleader = " "
 
-" " keymap for easy pane motion
+" center the cursor vertically or unset it, 0 is default
+set scrolloff=0
+if !exists('*VCenterCursor')
+  augroup VCenterCursor
+  au!
+  au OptionSet *,*.*
+    \ if and( expand("<amatch>")=='scrolloff' ,
+    \         exists('#VCenterCursor#WinEnter,WinNew,VimResized') )|
+    \   au! VCenterCursor WinEnter,WinNew,VimResized|
+    \ endif
+  augroup END
+  function VCenterCursor()
+    if !exists('#VCenterCursor#WinEnter,WinNew,VimResized')
+      let s:default_scrolloff=&scrolloff
+      let &scrolloff=winheight(win_getid())/2
+      au VCenterCursor WinEnter,WinNew,VimResized *,*.*
+        \ let &scrolloff-winheight(win_getid())/2
+    else
+      au! VCenterCursor WinEnter,WinNew,VimResized
+      let &scrolloff=s:default_scrolloff
+    endif
+  endfunction
+endif
 
-nnoremap <C-J> <C-W><C-J>
-nnoremap <C-K> <C-W><C-K>
-nnoremap <C-L> <C-W><C-L>
-nnoremap <C-H> <C-W><C-H>
+" toggle between VCenterCursor and scrolloff=0
+nnoremap <leader>zz :call VCenterCursor()<CR>
+
+" " keymap for easy pane motion, apparently obviated by the
+" vim-tmux-navigation
+
+"nnoremap <C-J> <C-W><C-J>
+"nnoremap <C-K> <C-W><C-K>
+"nnoremap <C-L> <C-W><C-L>
+"nnoremap <C-H> <C-W><C-H>
+
+" Having both relative and absolute line numbering
+set relativenumber
+set number
 
 " " kill the swp files
 set nobackup
@@ -46,6 +80,8 @@ set noswapfile
 set tabstop=2 shiftwidth=2 softtabstop=2 expandtab
 set autoindent
 set mouse=a
+set pastetoggle=<leader>p
+set showcmd
 
 " " nerdtree access
 nnoremap <leader>n :NERDTree<cr>
