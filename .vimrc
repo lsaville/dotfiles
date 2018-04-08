@@ -11,8 +11,11 @@ Plugin 'VundleVim/Vundle.vim'
 Plugin 'christoomey/vim-tmux-navigator'
 Plugin 'flazz/vim-colorschemes'
 Plugin 'scrooloose/nerdtree'
-Plugin 'elixir-lang/vim-elixir'
-Plugin 'tpope/vim-repeat'
+Plugin 'sheerun/vim-polyglot'
+Plugin 'rakr/vim-one'
+Plugin 'mhartington/oceanic-next'
+Plugin 'vim-airline/vim-airline'
+Plugin 'vim-airline/vim-airline-themes'
 " " All of your Plugins must be added before the following line
 call vundle#end()            " required
 filetype plugin indent on    " required
@@ -34,6 +37,10 @@ filetype plugin indent on    " required
 " Making leader a space
 let mapleader = " "
 
+" Smarter tab line via vim-airline readme
+let g:airline#extensions#tabline#enabled=1
+let g:airline_theme='molokai'
+
 " center the cursor vertically or unset it, 0 is default
 set scrolloff=0
 if !exists('*VCenterCursor')
@@ -41,18 +48,18 @@ if !exists('*VCenterCursor')
   au!
   au OptionSet *,*.*
     \ if and( expand("<amatch>")=='scrolloff' ,
-    \         exists('#VCenterCursor#WinEnter,WinNew,VimResized') )|
+    \         exists('#VCenterCursor#WinEnter,VimResized') )|
     \   au! VCenterCursor WinEnter,WinNew,VimResized|
     \ endif
   augroup END
   function VCenterCursor()
-    if !exists('#VCenterCursor#WinEnter,WinNew,VimResized')
+    if !exists('#VCenterCursor#WinEnter,VimResized')
       let s:default_scrolloff=&scrolloff
       let &scrolloff=winheight(win_getid())/2
-      au VCenterCursor WinEnter,WinNew,VimResized *,*.*
+      au VCenterCursor WinEnter,VimResized *,*.*
         \ let &scrolloff-winheight(win_getid())/2
     else
-      au! VCenterCursor WinEnter,WinNew,VimResized
+      au! VCenterCursor WinEnter,VimResized
       let &scrolloff=s:default_scrolloff
     endif
   endfunction
@@ -60,6 +67,10 @@ endif
 
 " toggle between VCenterCursor and scrolloff=0
 nnoremap <leader>zz :call VCenterCursor()<CR>
+
+" cruise buffer list
+nmap <C-f> :bn<CR>
+nmap <C-d> :bp<CR>
 
 " " keymap for easy pane motion, apparently obviated by the
 " vim-tmux-navigation
@@ -70,8 +81,9 @@ nnoremap <leader>zz :call VCenterCursor()<CR>
 "nnoremap <C-H> <C-W><C-H>
 
 " Having both relative and absolute line numbering
-set relativenumber
 set number
+set cursorcolumn
+set colorcolumn=80
 
 " " kill the swp files
 set nobackup
@@ -80,22 +92,56 @@ set noswapfile
 set tabstop=2 shiftwidth=2 softtabstop=2 expandtab
 set autoindent
 set mouse=a
-set pastetoggle=<leader>p
+
+set pastetoggle=<F2>
+:map <F3> :nohl<CR>
 set showcmd
+set showmode
+set hlsearch
+set incsearch
 
 " " nerdtree access
-nnoremap <leader>n :NERDTree<cr>
+nnoremap <leader>n :NERDTreeToggle<cr>
 
 "Colorscheme
-colorscheme one
+colorscheme OceanicNext
 autocmd Colorscheme * highlight Normal ctermbg=None
 autocmd Colorscheme * highlight NonText ctermbg=None
 
 " Switch syntax highlighting on
 syntax on
+" oceanic settings
+syntax enable
+if (has("termguicolors"))
+  set termguicolors
+endif
 
 "Set background as dark
 set background=dark
 
 "Don't show the splash screen on startup
 set shortmess=I
+
+" set emacs style command line shortcuts
+:cnoremap <C-A> <Home>
+:cnoremap <C-F> <Right>
+:cnoremap <C-B> <Left>
+:cnoremap <C-E> <End>
+
+"show hidden files in nerdtree
+let NERDTreeShowHidden=1
+
+" The Silver Searcher
+if executable('ag')
+  " Use ag over grep
+  set grepprg=ag\ --nogroup\ --nocolor
+
+  " Use ag in CtrlP for listing files. Lightning fast and respects .gitignore
+  let g:ctrlp_user_command = 'ag %s -l --nocolor -g ""'
+
+  " ag is fast enough that CtrlP doesn't need to cache
+  let g:ctrlp_use_caching = 0
+endif
+
+" bind K to grep word under cursor
+nnoremap K :grep! "\b<C-R><C-W>\b"<CR>:cw<CR>
